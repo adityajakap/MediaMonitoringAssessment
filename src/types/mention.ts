@@ -65,3 +65,47 @@ export interface BulkIngestSummary {
    */
   skipped_as_duplicate: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Search
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** A single row returned by GET /mentions — raw_payload excluded (internal). */
+export interface MentionRow {
+  id: string;
+  external_id: string;
+  source: string;
+  source_raw: string | null;
+  title: string | null;
+  content: string | null;
+  url: string;
+  url_normalized: string;
+  author: string | null;
+  published_at: Date | null;
+  engagement: number | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/** Validated, coerced query parameters for the search endpoint. */
+export interface SearchParams {
+  q?: string;
+  source?: string;
+  from?: string;
+  to?: string;
+  page: number;
+  pageSize: number;
+}
+
+/** Response envelope for GET /mentions. */
+export interface SearchResponse {
+  data: MentionRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+  /**
+   * Documents the exact ORDER BY applied so callers can predict which rows
+   * appear on which page without guessing.
+   */
+  sort: string;
+}
