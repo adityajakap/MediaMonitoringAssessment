@@ -1,0 +1,9 @@
+/**
+ * src/services/.gitkeep
+ *
+ * Placeholder — service modules (business logic, raw SQL queries) live here.
+ * Example future files:
+ *   src/services/articleService.ts
+ *   src/services/sourceService.ts
+ *   src/services/mentionService.ts
+ */

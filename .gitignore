@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment secrets — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+
+# Compiled output
+dist/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor dirs
+.idea/
+.vscode/
+*.swp

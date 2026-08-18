@@ -1,0 +1,15 @@
+-- migrations/sql/001_init.sql
+--
+-- Initial schema placeholder.
+-- Add your CREATE TABLE statements here when implementing features.
+-- Each subsequent migration gets its own numbered file, e.g.:
+--   002_add_articles.sql
+--   003_add_sources.sql
+
+-- Example (uncomment when ready):
+-- CREATE TABLE IF NOT EXISTS sources (
+--   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+--   name        TEXT        NOT NULL,
+--   url         TEXT        NOT NULL UNIQUE,
+--   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- );
