@@ -103,9 +103,26 @@ export interface SearchResponse {
   page: number;
   pageSize: number;
   total: number;
-  /**
+/**
    * Documents the exact ORDER BY applied so callers can predict which rows
    * appear on which page without guessing.
    */
   sort: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stats
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type GroupByMode = "source" | "day";
+
+export interface StatsBySource {
+  source: string;
+  count: number;
+}
+
+export interface StatsByDay {
+  day: string; // YYYY-MM-DD
+  count: number;
+}
+

@@ -9,6 +9,7 @@ import { Router } from "express";
 import healthRouter from "./health";
 import ingestRouter from "./ingest";
 import searchRouter from "./search";
+import statsRouter from "./stats";
 
 const apiRouter = Router();
 
@@ -20,6 +21,9 @@ apiRouter.use(ingestRouter);
 
 // ── Search ────────────────────────────────────────────────────────────────────
 apiRouter.use(searchRouter);
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+apiRouter.use(statsRouter);
 
 // ── Future feature routes ─────────────────────────────────────────────────────
 // apiRouter.use("/articles",  articlesRouter);
