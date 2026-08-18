@@ -55,4 +55,3 @@ docker compose down           # stop container (data volume persists)
 docker compose down -v        # stop AND wipe all data (fresh slate)
 ```
 
-> **Full README coming later** — this is the minimal run guide.
