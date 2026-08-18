@@ -1,0 +1,47 @@
+# =============================================================================
+# docker-compose.yml — local development database only
+#
+# Intentionally minimal: a single postgres:16 container removes the
+# "install Postgres locally" friction for reviewers without adding scope creep
+# (no app container, no pgAdmin, no Adminer).
+#
+# Usage:
+#   docker compose up -d        # start DB in the background
+#   pnpm migrate                # apply all pending migrations
+#   docker compose down         # stop (data volume persists)
+#   docker compose down -v      # stop AND delete all data
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: media_monitoring_db
+    restart: unless-stopped
+
+    environment:
+      # Keep these in sync with .env.example / your .env file.
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB:       media_monitoring
+
+    ports:
+      # host:container — only bind on localhost so the port isn't exposed
+      # on multi-interface machines.
+      - "127.0.0.1:5433:5432"
+
+    volumes:
+      # Named volume: data survives `docker compose down` / `up` cycles.
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      # pg_isready exits 0 only when the server is accepting connections.
+      # Scripts can `docker compose up -d --wait` to block until healthy.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d media_monitoring"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
