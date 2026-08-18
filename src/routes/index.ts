@@ -7,13 +7,17 @@
 
 import { Router } from "express";
 import healthRouter from "./health";
+import ingestRouter from "./ingest";
 
 const apiRouter = Router();
 
 // ── Core ─────────────────────────────────────────────────────────────────────
 apiRouter.use(healthRouter);
 
-// ── Feature routes (not yet implemented) ─────────────────────────────────────
+// ── Ingest ────────────────────────────────────────────────────────────────────
+apiRouter.use(ingestRouter);
+
+// ── Future feature routes ─────────────────────────────────────────────────────
 // apiRouter.use("/articles",  articlesRouter);
 // apiRouter.use("/sources",   sourcesRouter);
 // apiRouter.use("/mentions",  mentionsRouter);
