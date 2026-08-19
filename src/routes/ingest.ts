@@ -23,7 +23,7 @@ import { bulkInsertMentions, normalizeRawMention } from "../services/mentionServ
 import { RawMentionInput } from "../types/mention";
 import { logger } from "../utils/logger";
 
-const router = Router();
+const router: Router = Router();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers

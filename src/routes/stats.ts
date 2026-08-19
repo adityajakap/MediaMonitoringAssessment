@@ -16,7 +16,7 @@ import { getStatsBySource, getStatsByDay } from "../services/statsService";
 import { logger } from "../utils/logger";
 import { GroupByMode } from "../types/mention";
 
-const router = Router();
+const router: Router = Router();
 
 router.get("/mentions/stats", async (req: Request, res: Response): Promise<void> => {
   const groupBy = req.query["group_by"];

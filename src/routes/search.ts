@@ -23,7 +23,7 @@ import { searchMentions } from "../services/searchService";
 import { SearchParams } from "../types/mention";
 import { logger } from "../utils/logger";
 
-const router = Router();
+const router: Router = Router();
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;

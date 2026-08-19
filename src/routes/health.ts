@@ -15,7 +15,7 @@ import { Router, Request, Response } from "express";
 import { pool } from "../db";
 import { logger } from "../utils/logger";
 
-const router = Router();
+const router: Router = Router();
 
 interface HealthResponse {
   status: "ok" | "degraded";

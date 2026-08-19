@@ -11,7 +11,7 @@ import ingestRouter from "./ingest";
 import searchRouter from "./search";
 import statsRouter from "./stats";
 
-const apiRouter = Router();
+const apiRouter: Router = Router();
 
 // ── Core ─────────────────────────────────────────────────────────────────────
 apiRouter.use(healthRouter);
