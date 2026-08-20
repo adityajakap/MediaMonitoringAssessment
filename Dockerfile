@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY migrations/ ./migrations/
 
 # Compile TypeScript
 RUN pnpm exec tsc --outDir dist --noEmit false
