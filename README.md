@@ -39,7 +39,17 @@ curl -X POST http://localhost:3000/internal/mentions/bulk \
 
 I ran this twice against the provided `seed_mentions.json` (15 records) while building this: the first POST returned `{"inserted":13,"updated":1,"skipped_as_duplicate":1}`, and running the exact same request again returned `{"inserted":0,"updated":14,"skipped_as_duplicate":1}` — no new rows on the second pass, which is the idempotency behavior the brief asks for.
 
-Once seeded, `GET http://localhost:3000/mentions` and `GET http://localhost:3000/mentions/stats?group_by=source` should return real data.
+Once seeded, `GET http://localhost:3000/mentions` and `GET http://localhost:3000/mentions/stats?group_by=source` should return real data. The dashboard is also available at `http://localhost:3000`.
+
+**Running the tests:**
+
+```bash
+# Unit tests (no DB required)
+pnpm test
+
+# Integration tests (requires docker compose up -d and pnpm run migrate)
+pnpm test:integration
+```
 
 ## 2. Schema
 
