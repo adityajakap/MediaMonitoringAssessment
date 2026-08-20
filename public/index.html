@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Monitoring Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <div class="border-b border-slate-200 bg-white px-8 py-5 mb-8 shadow-sm">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Media Monitoring</h1>
+                <p class="text-slate-400 text-sm mt-0.5">Real-time overview of ingested mentions</p>
+            </div>
+            <div id="health-badge" class="flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span>
+                Connecting...
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-8 pb-12 space-y-6">
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Source Breakdown Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">By Source</h2>
+                <div id="stats-container" class="space-y-1.5">
+                    <p class="text-slate-400 text-sm italic">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Daily Chart Card -->
+            <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Mentions Per Day</h2>
+                <div class="relative" style="height: 220px;">
+                    <canvas id="daily-chart"></canvas>
+                    <p id="daily-empty" class="hidden absolute inset-0 flex items-center justify-center text-slate-400 text-sm italic">No date data available.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mentions Table Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-semibold text-slate-900">Mentions</h2>
+                <span id="result-count" class="text-sm text-slate-400 font-medium"></span>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Keyword</label>
+                    <input type="text" id="filter-q" placeholder="Search title & content..."
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Source</label>
+                    <select id="filter-source"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <option value="">All sources</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">From Date</label>
+                    <input type="date" id="filter-from"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">To Date</label>
+                    <input type="date" id="filter-to"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
+                </div>
+                <div class="col-span-2 md:col-span-4 flex gap-2 pt-1">
+                    <button onclick="applyFilters()"
+                        class="px-5 py-2 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-900">
+                        Search
+                    </button>
+                    <button onclick="resetFilters()"
+                        class="px-5 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 text-sm font-semibold rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-300">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Source</th>
+                            <th class="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Title</th>
+                            <th class="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-40">Published</th>
+                            <th class="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mentions-body" class="bg-white divide-y divide-slate-100 text-sm">
+                        <tr>
+                            <td colspan="4" class="px-5 py-10 text-center text-slate-400 italic">Loading mentions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
+                <button id="btn-prev" onclick="changePage(-1)" disabled
+                    class="flex items-center gap-1.5 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">
+                    &larr; Previous
+                </button>
+                <span id="page-info" class="text-sm text-slate-400 font-medium">—</span>
+                <button id="btn-next" onclick="changePage(1)" disabled
+                    class="flex items-center gap-1.5 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── State ─────────────────────────────────────────────────────────────
+        let currentPage = 1;
+        let currentFilters = {};
+        let dailyChartInstance = null;
+
+        // ── Health check ──────────────────────────────────────────────────────
+        async function checkHealth() {
+            const badge = document.getElementById('health-badge');
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Healthy`;
+                    badge.className = 'flex items-center gap-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full';
+                } else {
+                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Degraded`;
+                    badge.className = 'flex items-center gap-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full';
+                }
+            } catch {
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Offline`;
+                badge.className = 'flex items-center gap-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full';
+            }
+        }
+
+        // ── Source Breakdown ──────────────────────────────────────────────────
+        async function fetchStats() {
+            const container = document.getElementById('stats-container');
+            const select = document.getElementById('filter-source');
+            try {
+                const res = await fetch('/mentions/stats?group_by=source');
+                if (!res.ok) throw new Error('Failed');
+                const stats = await res.json();
+
+                if (!stats.length) {
+                    container.innerHTML = '<p class="text-sm text-slate-400 italic">No data.</p>';
+                    return;
+                }
+
+                // Populate the source dropdown (preserve current selection)
+                const currentVal = select.value;
+                const existingOptions = new Set(
+                    Array.from(select.options).map(o => o.value)
+                );
+                stats.forEach(s => {
+                    if (!existingOptions.has(s.source)) {
+                        const opt = document.createElement('option');
+                        opt.value = s.source;
+                        opt.textContent = s.source;
+                        select.appendChild(opt);
+                    }
+                });
+                if (currentVal) select.value = currentVal;
+
+                // Render progress bars
+                const max = Math.max(...stats.map(s => s.count));
+                container.innerHTML = stats.map(s => {
+                    const pct = Math.round((s.count / max) * 100);
+                    return `
+                        <div class="group cursor-pointer" onclick="filterBySource('${s.source}')" title="Filter by ${s.source}">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-slate-700 capitalize hover:text-blue-600 transition-colors">${s.source}</span>
+                                <span class="text-xs font-bold text-slate-500">${s.count.toLocaleString()}</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        </div>`;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = `<p class="text-sm text-red-500">Error: ${err.message}</p>`;
+            }
+        }
+
+        // Shortcut: click a source in the sidebar to filter the table
+        function filterBySource(source) {
+            document.getElementById('filter-source').value = source;
+            applyFilters();
+        }
+
+        // ── Daily Chart ───────────────────────────────────────────────────────
+        async function fetchDailyChart() {
+            const emptyMsg = document.getElementById('daily-empty');
+            try {
+                const res = await fetch('/mentions/stats?group_by=day');
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+
+                if (!data.length) {
+                    emptyMsg.classList.remove('hidden');
+                    return;
+                }
+
+                const labels = data.map(d => {
+                    const [y, m, day] = d.day.split('-');
+                    return `${day}/${m}`;
+                });
+                const counts = data.map(d => d.count);
+
+                const ctx = document.getElementById('daily-chart').getContext('2d');
+
+                if (dailyChartInstance) dailyChartInstance.destroy();
+
+                dailyChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Mentions',
+                            data: counts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            borderColor: 'rgba(59, 130, 246, 0.8)',
+                            borderWidth: 1.5,
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => {
+                                        const idx = items[0].dataIndex;
+                                        return data[idx].day;
+                                    },
+                                    label: (item) => ` ${item.raw} mention${item.raw !== 1 ? 's' : ''}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 11 }, color: '#94a3b8' },
+                                border: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: { size: 11 },
+                                    color: '#94a3b8',
+                                    precision: 0,
+                                    stepSize: 1
+                                },
+                                grid: { color: '#f1f5f9' },
+                                border: { display: false }
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                emptyMsg.textContent = `Error: ${err.message}`;
+                emptyMsg.classList.remove('hidden');
+            }
+        }
+
+        // ── Search / Filters ──────────────────────────────────────────────────
+        function applyFilters() {
+            currentFilters = {
+                q:      document.getElementById('filter-q').value,
+                source: document.getElementById('filter-source').value,
+                from:   document.getElementById('filter-from').value,
+                to:     document.getElementById('filter-to').value
+            };
+            currentPage = 1;
+            fetchMentions();
+        }
+
+        function resetFilters() {
+            ['filter-q', 'filter-source', 'filter-from', 'filter-to'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            applyFilters();
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            fetchMentions();
+        }
+
+        // ── Mentions Table ────────────────────────────────────────────────────
+        async function fetchMentions() {
+            const tbody = document.getElementById('mentions-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-10 text-center text-slate-400 italic">Loading...</td></tr>';
+
+            try {
+                const params = new URLSearchParams({ page: currentPage });
+                if (currentFilters.q)      params.append('q',      currentFilters.q);
+                if (currentFilters.source) params.append('source', currentFilters.source);
+                if (currentFilters.from)   params.append('from', new Date(currentFilters.from).toISOString());
+                if (currentFilters.to) {
+                    const to = new Date(currentFilters.to);
+                    to.setHours(23, 59, 59, 999);
+                    params.append('to', to.toISOString());
+                }
+
+                const res = await fetch('/mentions?' + params.toString());
+                if (!res.ok) throw new Error('Failed to fetch mentions');
+                const data = await res.json();
+
+                const totalPages = Math.ceil(data.total / data.pageSize) || 1;
+                document.getElementById('page-info').innerText =
+                    `Page ${data.page} of ${totalPages} · ${data.total.toLocaleString()} result${data.total !== 1 ? 's' : ''}`;
+                document.getElementById('result-count').innerText =
+                    `${data.total.toLocaleString()} result${data.total !== 1 ? 's' : ''}`;
+                document.getElementById('btn-prev').disabled = data.page <= 1;
+                document.getElementById('btn-next').disabled = data.page >= totalPages;
+
+                if (!data.data.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-10 text-center text-slate-400">No mentions found matching your criteria.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.data.map(m => {
+                    const date = m.published_at
+                        ? new Date(m.published_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                        : '<span class="text-slate-400">—</span>';
+
+                    return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 capitalize">
+                                ${m.source}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 max-w-sm">
+                            <p class="text-sm text-slate-900 font-medium leading-snug line-clamp-2">
+                                ${m.title || '<em class="text-slate-400 font-normal">Untitled</em>'}
+                            </p>
+                        </td>
+                        <td class="px-5 py-4 whitespace-nowrap text-sm text-slate-500">${date}</td>
+                        <td class="px-5 py-4 whitespace-nowrap">
+                            <a href="${m.url}" target="_blank" rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-blue-600 border border-slate-200 hover:border-blue-200 bg-white hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors">
+                                Open
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-5 py-4">
+                    <div class="p-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">${err.message}</div>
+                </td></tr>`;
+            }
+        }
+
+        // ── Enter key on filters ──────────────────────────────────────────────
+        ['filter-q', 'filter-source', 'filter-from', 'filter-to'].forEach(id => {
+            document.getElementById(id)?.addEventListener('keydown', e => {
+                if (e.key === 'Enter') applyFilters();
+            });
+        });
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            fetchStats();
+            fetchDailyChart();
+            fetchMentions();
+        });
+    </script>
+</body>
+</html>

@@ -7,6 +7,7 @@
  */
 
 import express, { Application, Request, Response, NextFunction } from "express";
+import path from "path";
 import apiRouter from "./routes";
 import { logger } from "./utils/logger";
 
@@ -16,6 +17,9 @@ export function createApp(): Application {
   // ── Request parsing ─────────────────────────────────────────────────────────
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // ── Static files ────────────────────────────────────────────────────────────
+  app.use(express.static(path.join(__dirname, "../public")));
 
   // ── Request logging ─────────────────────────────────────────────────────────
   app.use((req: Request, _res: Response, next: NextFunction) => {
