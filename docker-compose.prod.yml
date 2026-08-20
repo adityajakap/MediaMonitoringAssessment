@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: media_monitoring_app
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=3000
+    networks:
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mediamonitoring.rule=Host(`media-monitoring.stuntings.web.id`)"
+      - "traefik.http.routers.mediamonitoring.entrypoints=websecure"
+      - "traefik.http.routers.mediamonitoring.tls=true"
+      - "traefik.http.routers.mediamonitoring.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mediamonitoring.loadbalancer.server.port=3000"
+
+networks:
+  traefik-public:
+    external: true
