@@ -25,8 +25,4 @@ apiRouter.use(searchRouter);
 // ── Stats ─────────────────────────────────────────────────────────────────────
 apiRouter.use(statsRouter);
 
-// ── Future feature routes ─────────────────────────────────────────────────────
-// apiRouter.use("/articles",  articlesRouter);
-// apiRouter.use("/sources",   sourcesRouter);
-
 export default apiRouter;
